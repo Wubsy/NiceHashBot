@@ -60,7 +60,9 @@ var(
 
 const(
 	binanceMethodBase = "https://api.binance.com"
-	urlMethodBase = "https://api.nicehash.com/api?method="
+	urlMethodBase = "https://api2.nicehash.com/api?method="
+	newUrlMethodBase = "https://api2.nicehash.com/main/api/v2/mining/external/"
+	rigs2 = "/rigs2/"
 	statsProvider = "stats.provider&"
 	statsProviderEx = "stats.provider.ex&"
 	statsProviderWorkers = "stats.provider.workers&"
@@ -68,6 +70,7 @@ const(
 
 func init(){
 	flag.StringVar(&token, "t", "", "Bot Token")
+	flag.Parse()
 }
 
 func main(){
@@ -124,7 +127,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate){
 						wallet = "3LDpUUQp19McZqkBSagT1qkNHyZTz5RMNy"
 					}
 					if m.Author.ID == "157630049644707840" {
-						wallet = "3MaJ5Tj4GgwgSzFxkgRu2VUxDp5GnazMdP"
+						wallet = "3CsbCiy8SNpxEZ7aXMxytea2ggpJhE2JYj"
 					}
 					if m.Author.ID == "237779090759745536" {
 						wallet = "383r1QLUjStH65DGmPkzbVyVge37D4DtR6"
@@ -144,7 +147,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate){
 						wallet = "3LDpUUQp19McZqkBSagT1qkNHyZTz5RMNy"
 					}
 					if m.Author.ID == "157630049644707840" {
-						wallet = "3MaJ5Tj4GgwgSzFxkgRu2VUxDp5GnazMdP"
+						wallet = "3CsbCiy8SNpxEZ7aXMxytea2ggpJhE2JYj"
 					}
 					if m.Author.ID == "237779090759745536" {
 						wallet = "383r1QLUjStH65DGmPkzbVyVge37D4DtR6"
@@ -165,12 +168,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate){
 				return
 			}
 
-				if len(results.Result.Stats) >= 1 {
+				if len(results.UnpaidAmount) >= 1 {
 					var amount = 0.0
 
-					for i := 0; i < len(results.Result.Stats); i++ {
+					for i := 0; i < len(results.UnpaidAmount); i++ {
 
-						num, err := strconv.ParseFloat(results.Result.Stats[i].Balance, 64)
+						num, err := strconv.ParseFloat(results.UnpaidAmount, 64)
 
 						if err != nil {
 							fmt.Println(err)
@@ -198,30 +201,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate){
 			sendMessage("Invalid arguments")
 			return
 		}
-		/*}  else if strings.HasPrefix(c, "?price ") && !isRateLimited() {
-			rate := strings.TrimPrefix(c, "?price ")
-			amountUSDStr, err := getPriceUSD(rate)
-			if err != nil {
-				fmt.Println(err)
-				sendMessage("Error getting price")
-				return
-			}
-			if amountUSDStr.Data.Rates.USD == "" {
-				sendMessage("No matching tickers")
-				return
-			}
-			sendMessage("1 " + strings.ToUpper(rate) + " = $" + amountUSDStr.Data.Rates.USD + " USD")
-			return
-		} else if c == "?price" && !isRateLimited() {
-			amountUSDStr, err := getPriceUSD("")
-			if err != nil {
-				fmt.Println(err)
-				sendMessage("Error getting price")
-				return
-			}
-
-			sendMessage("1 BTC = $" + amountUSDStr.Data.Rates.USD + " USD")
-		*/} else if strings.HasPrefix(c, "?price ") && !isRateLimited(){
+} else if strings.HasPrefix(c, "?price ") && !isRateLimited(){
 		tick := strings.TrimPrefix(c, "?price ")
 		amountBTC, err := getTicker(tick)
 		if err != nil {
@@ -284,12 +264,10 @@ func getTicker(t string) (*Price, error) {
 	return symResult, json.Unmarshal(symData, &symResult)
 
 }
-func GetInfo(params params) (*Main, error) {
-	urn, err := fetchUrl(urlMethodBase + statsProvider + "addr=" + params.Wallet)
+func GetInfo(params params) (*newMain, error) {
+	urn, err := fetchUrl(newUrlMethodBase + params.Wallet + rigs2)
 
-
-
-	var contentResult *Main
+	var contentResult *newMain
 	if err != nil {
 		return nil, err
 	}
@@ -298,6 +276,10 @@ func GetInfo(params params) (*Main, error) {
 }
 
 //This whole damn API is a mess
+type newMain struct {
+	UnpaidAmount string`json:"unpaidAmount"`
+}
+
 type Main struct {
 	Result Result`json:"result"`
 }
@@ -594,3 +576,5 @@ func isRateLimited() bool {
 		return false
 	}
 }
+
+//TODO: Completely remove old API stuff and add full support for new API
